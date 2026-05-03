@@ -70,11 +70,11 @@ const FADE = {
   transition: { duration: 0.18, ease: 'easeOut' as const },
 };
 
-const ACTION_CFG: Record<string, { label: string; Icon: React.ComponentType<{ className?: string }>; bg: string; color: string }> = {
-  settings_updated: { label: 'Configurações alteradas', Icon: Settings, bg: '#EFF6FF', color: '#1D4ED8' },
-  status_updated:   { label: 'Status do dia',           Icon: Pin,      bg: '#F0FDF4', color: '#15803D' },
-  statuses_reset:   { label: 'Registros resetados',     Icon: RotateCcw, bg: '#FFFBEB', color: '#92400E' },
-  full_reset:       { label: 'Reset completo',          Icon: Trash2,   bg: '#FEF2F2', color: '#DC2626' },
+const ACTION_CFG: Record<string, { label: string; Icon: React.ComponentType<{ className?: string }>; bg: string; bgDark: string; color: string; colorDark: string }> = {
+  settings_updated: { label: 'Configurações alteradas', Icon: Settings,  bg: '#EFF6FF', bgDark: '#1e3a5f', color: '#1D4ED8', colorDark: '#93C5FD' },
+  status_updated:   { label: 'Status do dia',           Icon: Pin,       bg: '#F0FDF4', bgDark: '#14532D', color: '#15803D', colorDark: '#4ADE80' },
+  statuses_reset:   { label: 'Registros resetados',     Icon: RotateCcw, bg: '#FFFBEB', bgDark: '#1E293B', color: '#92400E', colorDark: '#FBBF24' },
+  full_reset:       { label: 'Reset completo',          Icon: Trash2,    bg: '#FEF2F2', bgDark: '#7F1D1D', color: '#DC2626', colorDark: '#FCA5A5' },
 };
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -271,7 +271,7 @@ export default function DashboardClient({ user, initialSettings, initialStatuses
                   { label: 'Ver Simulação', sub: '180 dias detalhados', tab: 'simulacao' as Tab, color: '#2563EB', bg: '#EFF6FF', border: '#BFDBFE' },
                   { label: 'Ver Gráficos',  sub: 'Evolução e cenários',  tab: 'graficos'  as Tab, color: '#7C3AED', bg: '#F5F3FF', border: '#DDD6FE' },
                   { label: 'Ver Análise',   sub: 'Risco e insights',     tab: 'analise'   as Tab, color: '#059669', bg: '#F0FDF4', border: '#A7F3D0' },
-                  { label: 'Sessões',       sub: 'Salvar e carregar',    tab: 'sessoes'   as Tab, color: '#D97706', bg: '#FFFBEB', border: '#FDE68A' },
+                  { label: 'Sessões',       sub: 'Salvar e carregar',    tab: 'sessoes'   as Tab, color: dark ? '#FBBF24' : '#D97706', bg: dark ? '#1E293B' : '#FFFBEB', border: dark ? '#854d0e' : '#FDE68A' },
                 ].map(q => (
                   <button
                     key={q.tab}
@@ -460,6 +460,8 @@ function MiniInsights({
 function HistoricoView() {
   const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const { theme } = useTheme();
+  const dark = theme === 'dark';
 
   useEffect(() => {
     getActivityLogs().then(data => {
@@ -517,7 +519,7 @@ function HistoricoView() {
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
                         {cfg ? (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold" style={{ background: cfg.bg, color: cfg.color }}>
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold" style={{ background: dark ? cfg.bgDark : cfg.bg, color: dark ? cfg.colorDark : cfg.color }}>
                             <cfg.Icon className="w-3 h-3" />
                             {cfg.label}
                           </span>

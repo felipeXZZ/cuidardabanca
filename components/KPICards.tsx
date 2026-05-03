@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { TrendingUp } from 'lucide-react';
 import { type DayData, formatBRL, formatPct } from '@/lib/bankroll';
+import { useTheme } from '@/context/ThemeProvider';
 
 interface KPICardsProps {
   days: DayData[];
@@ -12,15 +13,18 @@ interface KPICardsProps {
 const PERIODS = [30, 60, 90, 120, 150, 180] as const;
 
 const COLORS = [
-  { text: '#2563EB', icon: '#2563EB', badge: '#EFF6FF', badgeDark: '#1e3a5f', badgeText: '#1D4ED8', border: '#BFDBFE' },
-  { text: '#7C3AED', icon: '#7C3AED', badge: '#F5F3FF', badgeDark: '#2e1065', badgeText: '#6D28D9', border: '#DDD6FE' },
-  { text: '#0891B2', icon: '#0891B2', badge: '#ECFEFF', badgeDark: '#164e63', badgeText: '#0E7490', border: '#A5F3FC' },
-  { text: '#059669', icon: '#059669', badge: '#F0FDF4', badgeDark: '#14532D', badgeText: '#047857', border: '#A7F3D0' },
-  { text: '#D97706', icon: '#D97706', badge: '#FFFBEB', badgeDark: '#78350F', badgeText: '#B45309', border: '#FDE68A' },
-  { text: '#DC2626', icon: '#DC2626', badge: '#FEF2F2', badgeDark: '#7F1D1D', badgeText: '#B91C1C', border: '#FECACA' },
+  { text: '#2563EB', badge: '#EFF6FF', badgeDark: '#1e3a5f', badgeText: '#1D4ED8', badgeTextDark: '#93C5FD', border: '#BFDBFE', borderDark: '#1e40af' },
+  { text: '#7C3AED', badge: '#F5F3FF', badgeDark: '#2e1065', badgeText: '#6D28D9', badgeTextDark: '#C4B5FD', border: '#DDD6FE', borderDark: '#4c1d95' },
+  { text: '#0891B2', badge: '#ECFEFF', badgeDark: '#164e63', badgeText: '#0E7490', badgeTextDark: '#67E8F9', border: '#A5F3FC', borderDark: '#155e75' },
+  { text: '#059669', badge: '#F0FDF4', badgeDark: '#14532D', badgeText: '#047857', badgeTextDark: '#4ADE80', border: '#A7F3D0', borderDark: '#166534' },
+  { text: '#D97706', badge: '#FFFBEB', badgeDark: '#1E293B', badgeText: '#B45309', badgeTextDark: '#FBBF24', border: '#FDE68A', borderDark: '#854d0e' },
+  { text: '#DC2626', badge: '#FEF2F2', badgeDark: '#7F1D1D', badgeText: '#B91C1C', badgeTextDark: '#FCA5A5', border: '#FECACA', borderDark: '#991B1B' },
 ];
 
 export default function KPICards({ days, initialBankroll }: KPICardsProps) {
+  const { theme } = useTheme();
+  const dark = theme === 'dark';
+
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3 mb-6">
       {PERIODS.map((period, i) => {
@@ -43,14 +47,18 @@ export default function KPICards({ days, initialBankroll }: KPICardsProps) {
               <span className="text-[11px] font-semibold text-[#64748B] dark:text-[#94A3B8] uppercase tracking-wide">
                 {period} dias
               </span>
-              <TrendingUp style={{ color: c.icon }} className="w-3.5 h-3.5" />
+              <TrendingUp style={{ color: c.text }} className="w-3.5 h-3.5" />
             </div>
             <div className="text-[15px] font-bold tabular-nums mb-2" style={{ color: c.text }}>
               {formatBRL(day.accumulated)}
             </div>
             <span
               className="inline-flex items-center text-[11px] font-semibold px-2 py-0.5 rounded-full border"
-              style={{ background: c.badge, color: c.badgeText, borderColor: c.border }}
+              style={{
+                background: dark ? c.badgeDark : c.badge,
+                color: dark ? c.badgeTextDark : c.badgeText,
+                borderColor: dark ? c.borderDark : c.border,
+              }}
             >
               +{formatPct(gain)}
             </span>

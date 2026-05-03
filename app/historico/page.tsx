@@ -7,12 +7,12 @@ import { Settings, Pin, RotateCcw, Trash2, Clock } from 'lucide-react';
 const ACTION_CFG: Record<string, {
   label: string;
   Icon: React.ComponentType<{ className?: string }>;
-  bg: string; color: string;
+  cls: string;
 }> = {
-  settings_updated: { label: 'Configurações alteradas', Icon: Settings, bg: '#EFF6FF', color: '#1D4ED8' },
-  status_updated:   { label: 'Status do dia atualizado', Icon: Pin,      bg: '#F0FDF4', color: '#15803D' },
-  statuses_reset:   { label: 'Registros resetados',      Icon: RotateCcw, bg: '#FFFBEB', color: '#92400E' },
-  full_reset:       { label: 'Reset completo',           Icon: Trash2,   bg: '#FEF2F2', color: '#DC2626' },
+  settings_updated: { label: 'Configurações alteradas', Icon: Settings,  cls: 'bg-[#EFF6FF] dark:bg-[#1e3a5f] text-[#1D4ED8] dark:text-[#93C5FD]' },
+  status_updated:   { label: 'Status do dia atualizado', Icon: Pin,       cls: 'bg-[#F0FDF4] dark:bg-[#14532D] text-[#15803D] dark:text-[#4ADE80]' },
+  statuses_reset:   { label: 'Registros resetados',      Icon: RotateCcw, cls: 'bg-[#FFFBEB] dark:bg-[#1E293B] text-[#92400E] dark:text-[#FBBF24]' },
+  full_reset:       { label: 'Reset completo',           Icon: Trash2,    cls: 'bg-[#FEF2F2] dark:bg-[#7F1D1D]/60 text-[#DC2626] dark:text-[#FCA5A5]' },
 };
 
 function formatDate(iso: string) {
@@ -101,10 +101,7 @@ export default async function HistoricoPage() {
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
                           {cfg ? (
-                            <span
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
-                              style={{ background: cfg.bg, color: cfg.color }}
-                            >
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${cfg.cls}`}>
                               <cfg.Icon className="w-3 h-3" />
                               {cfg.label}
                             </span>

@@ -91,7 +91,7 @@ export default function SettingsPanel({
                 value={settings[field]}
                 onChange={(v) => onChange(field, v)}
                 isPercent={isPercent}
-                className="bg-[#FFF2CC] dark:bg-[#3F3F1F] border border-[#E2E8F0] dark:border-[#475569] rounded-lg px-3 py-2 text-sm text-[#0F172A] dark:text-[#F1F5F9] w-40 focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent transition-all"
+                className="bg-[#F8FAFC] dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#334155] rounded-lg px-3 py-2 text-sm text-[#0F172A] dark:text-[#F1F5F9] w-40 focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent transition-all"
               />
             </div>
           ))}
@@ -113,7 +113,7 @@ export default function SettingsPanel({
           <button
             onClick={onResetStatuses}
             disabled={saving}
-            className="flex items-center gap-2 bg-white dark:bg-transparent hover:bg-[#FFFBEB] dark:hover:bg-[#78350F]/20 text-[#92400E] dark:text-[#FCD34D] border border-[#FDE68A] dark:border-[#92400E] px-4 py-2 rounded-lg text-sm font-semibold transition-all disabled:opacity-60"
+            className="flex items-center gap-2 bg-white dark:bg-[#1E293B] hover:bg-[#FFFBEB] dark:hover:bg-[#F59E0B]/10 text-[#92400E] dark:text-[#FBBF24] border border-[#FDE68A] dark:border-[#F59E0B]/30 px-4 py-2 rounded-lg text-sm font-semibold transition-all disabled:opacity-60"
           >
             <RotateCcw className="w-4 h-4" />
             <span className="hidden sm:block">Resetar Registros</span>
@@ -140,7 +140,7 @@ export default function SettingsPanel({
         </div>
 
         {showDanger && (
-          <div className="flex items-start gap-2 bg-[#FFFBEB] dark:bg-[#78350F]/20 border border-[#FDE68A] dark:border-[#92400E] border-l-4 border-l-[#F59E0B] rounded-lg px-3 py-2 text-xs text-[#92400E] dark:text-[#FCD34D]">
+          <div className="flex items-start gap-2 bg-[#FFFBEB] dark:bg-[#1E293B] border border-[#FDE68A] dark:border-[#F59E0B]/30 border-l-4 border-l-[#F59E0B] rounded-lg px-3 py-2 text-xs text-[#92400E] dark:text-[#FBBF24]">
             <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
             <span><strong>Atenção:</strong> retorno acima de 5% ao dia é extremamente agressivo e aumenta muito o risco de perda total da banca.</span>
           </div>

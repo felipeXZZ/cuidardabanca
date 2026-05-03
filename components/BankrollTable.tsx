@@ -139,8 +139,8 @@ function DayTable({ days, from, to, onStatusChange, savingDay, goal, filter }: {
 
               const badgeBg   = dark ? cfg.badgeDark    : cfg.badge;
               const badgeTxt  = dark ? cfg.badgeTextDark : cfg.badgeText;
-              const accumBg   = dark ? '#78350F'  : '#FEF3C7';
-              const accumTxt  = dark ? '#FCD34D'  : '#92400E';
+              const accumBg   = dark ? '#0f1f3d'  : '#EFF6FF';
+              const accumTxt  = dark ? '#93C5FD'  : '#1e40af';
 
               return (
                 <tr

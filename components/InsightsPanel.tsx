@@ -25,11 +25,11 @@ const TYPE_STYLES = {
     desc: 'text-[#166534] dark:text-[#4ADE80]/70',
   },
   warning: {
-    card: 'bg-[#FFFBEB] dark:bg-[#78350F]/20 border-[#FDE68A] dark:border-[#92400E]',
-    icon: 'bg-[#FEF3C7] dark:bg-[#78350F]/40 text-[#D97706]',
-    value: 'text-[#92400E] dark:text-[#FCD34D]',
-    title: 'text-[#B45309] dark:text-[#FDE68A]',
-    desc: 'text-[#92400E] dark:text-[#FCD34D]/70',
+    card: 'bg-[#FFFBEB] dark:bg-[#1E293B] border-[#FDE68A] dark:border-[#F59E0B]/25',
+    icon: 'bg-[#FEF3C7] dark:bg-[#F59E0B]/10 text-[#D97706] dark:text-[#FBBF24]',
+    value: 'text-[#92400E] dark:text-[#FBBF24]',
+    title: 'text-[#B45309] dark:text-[#FBBF24]',
+    desc: 'text-[#92400E] dark:text-[#94A3B8]',
   },
   info: {
     card: 'bg-[#EFF6FF] dark:bg-[#1e3a5f]/50 border-[#BFDBFE] dark:border-[#1e40af]',
