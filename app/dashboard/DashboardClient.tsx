@@ -41,6 +41,7 @@ import InsightsPanel from '@/components/InsightsPanel';
 import GoalProgress from '@/components/GoalProgress';
 import RiskAnalysis from '@/components/RiskAnalysis';
 import SessionsManager from '@/components/SessionsManager';
+import { useTheme } from '@/context/ThemeProvider';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -80,6 +81,8 @@ const ACTION_CFG: Record<string, { label: string; Icon: React.ComponentType<{ cl
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function DashboardClient({ user, initialSettings, initialStatuses }: Props) {
+  const { theme } = useTheme();
+  const dark = theme === 'dark';
   const [settings, setSettings] = useState<BankrollSettings>(initialSettings);
   const [statuses, setStatuses] = useState<Record<number, DayStatus>>(initialStatuses);
   const [saving, setSaving] = useState(false);
