@@ -271,9 +271,9 @@ export default function DashboardClient({ user, initialSettings, initialStatuses
               {/* Quick actions */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
-                  { label: 'Ver Simulação', sub: '180 dias detalhados', tab: 'simulacao' as Tab, color: '#2563EB', bg: '#EFF6FF', border: '#BFDBFE' },
-                  { label: 'Ver Gráficos',  sub: 'Evolução e cenários',  tab: 'graficos'  as Tab, color: '#7C3AED', bg: '#F5F3FF', border: '#DDD6FE' },
-                  { label: 'Ver Análise',   sub: 'Risco e insights',     tab: 'analise'   as Tab, color: '#059669', bg: '#F0FDF4', border: '#A7F3D0' },
+                  { label: 'Ver Simulação', sub: '180 dias detalhados', tab: 'simulacao' as Tab, color: dark ? '#93C5FD' : '#2563EB', bg: dark ? '#1e3a5f' : '#EFF6FF', border: dark ? '#1e40af' : '#BFDBFE' },
+                  { label: 'Ver Gráficos',  sub: 'Evolução e cenários',  tab: 'graficos'  as Tab, color: dark ? '#C4B5FD' : '#7C3AED', bg: dark ? '#2e1065' : '#F5F3FF', border: dark ? '#4c1d95' : '#DDD6FE' },
+                  { label: 'Ver Análise',   sub: 'Risco e insights',     tab: 'analise'   as Tab, color: dark ? '#4ADE80' : '#059669', bg: dark ? '#14532D' : '#F0FDF4', border: dark ? '#166534' : '#A7F3D0' },
                   { label: 'Sessões',       sub: 'Salvar e carregar',    tab: 'sessoes'   as Tab, color: dark ? '#FBBF24' : '#D97706', bg: dark ? '#1E293B' : '#FFFBEB', border: dark ? '#854d0e' : '#FDE68A' },
                 ].map(q => (
                   <button
