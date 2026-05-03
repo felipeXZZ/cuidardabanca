@@ -32,17 +32,12 @@ export function calculateBankroll(
 
   for (let i = 1; i <= 180; i++) {
     const investment = banca;
-    const profit = investment * r;
+    const status = statuses[i] ?? 'pendente';
+    // derrota = dia flat (sem crescimento); todos os outros compõem
+    const profit = status === 'derrota' ? 0 : investment * r;
     const accumulated = investment + profit;
     banca = accumulated;
-    rows.push({
-      day: i,
-      investment,
-      dailyReturn,
-      profit,
-      accumulated,
-      status: statuses[i] ?? 'pendente',
-    });
+    rows.push({ day: i, investment, dailyReturn, profit, accumulated, status });
   }
   return rows;
 }

@@ -114,4 +114,30 @@ CREATE POLICY "activity_logs: insert own"
   ON public.activity_logs FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+-- ─── BETS ────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS public.bets (
+  id         UUID          NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id    UUID          NOT NULL REFERENCES auth.users ON DELETE CASCADE,
+  bet_date   DATE          NOT NULL,
+  event      TEXT          NOT NULL,
+  odd        NUMERIC(10,2) NOT NULL CHECK (odd > 1),
+  stake      NUMERIC(15,2) NOT NULL CHECK (stake > 0),
+  result     TEXT          NOT NULL CHECK (result IN ('vitoria','derrota')),
+  profit     NUMERIC(15,2) NOT NULL,
+  created_at TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ   NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE public.bets ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "bets: all own"
+  ON public.bets FOR ALL
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+DROP TRIGGER IF EXISTS trg_bets_updated_at ON public.bets;
+CREATE TRIGGER trg_bets_updated_at
+  BEFORE UPDATE ON public.bets
+  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
 -- ─── FIM ─────────────────────────────────────────────────────────────────────
