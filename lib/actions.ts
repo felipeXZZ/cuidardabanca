@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
-import { DEFAULT_SETTINGS, type BankrollSettings, type DayStatus } from '@/lib/bankroll';
+import { DEFAULT_SETTINGS, type BankrollSettings, type BankrollAdjustment, type DayStatus } from '@/lib/bankroll';
 
 // ─── SETTINGS ────────────────────────────────────────────────────────────────
 
@@ -118,8 +118,71 @@ export async function resetAll(): Promise<void> {
   await Promise.all([
     supabase.from('day_statuses').delete().eq('user_id', user.id),
     supabase.from('bankroll_settings').delete().eq('user_id', user.id),
+    supabase.from('bankroll_adjustments').delete().eq('user_id', user.id),
   ]);
   await log(supabase, user.id, 'full_reset', {});
+  revalidatePath('/dashboard');
+}
+
+// ─── BANKROLL ADJUSTMENTS ─────────────────────────────────────────────────────
+
+export async function getBankrollAdjustments(): Promise<BankrollAdjustment[]> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data } = await supabase
+    .from('bankroll_adjustments')
+    .select('id, day, old_value, new_value, type, created_at')
+    .eq('user_id', user.id)
+    .order('day', { ascending: true });
+
+  return (data as BankrollAdjustment[]) ?? [];
+}
+
+export async function createBankrollAdjustment(
+  day: number,
+  old_value: number,
+  new_value: number,
+  type: 'sync' | 'reset'
+): Promise<void> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Não autenticado');
+
+  const { error } = await supabase
+    .from('bankroll_adjustments')
+    .upsert(
+      { user_id: user.id, day, old_value, new_value, type },
+      { onConflict: 'user_id,day' }
+    );
+
+  if (error) throw new Error(error.message);
+  await log(supabase, user.id, 'bankroll_adjusted', { day, old_value, new_value, type });
+  revalidatePath('/dashboard');
+}
+
+export async function resetToNewBankroll(
+  new_initial: number,
+  daily_return: number,
+  goal: number
+): Promise<void> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Não autenticado');
+
+  await Promise.all([
+    supabase.from('day_statuses').delete().eq('user_id', user.id),
+    supabase.from('bankroll_adjustments').delete().eq('user_id', user.id),
+    supabase
+      .from('bankroll_settings')
+      .upsert(
+        { user_id: user.id, initial_bankroll: new_initial, daily_return, goal },
+        { onConflict: 'user_id' }
+      ),
+  ]);
+
+  await log(supabase, user.id, 'bankroll_reset_new', { new_initial, daily_return, goal });
   revalidatePath('/dashboard');
 }
 

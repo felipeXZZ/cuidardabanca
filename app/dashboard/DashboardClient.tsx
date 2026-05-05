@@ -11,6 +11,7 @@ import {
 import {
   calculateBankroll,
   type BankrollSettings,
+  type BankrollAdjustment,
   type DayStatus,
   type DayData,
   DEFAULT_SETTINGS,
@@ -18,6 +19,7 @@ import {
 } from '@/lib/bankroll';
 import {
   saveSettings, setDayStatus, resetStatuses, resetAll,
+  createBankrollAdjustment, resetToNewBankroll,
   getActivityLogs, type ActivityLog,
 } from '@/lib/actions';
 import { computeInsights } from '@/lib/insights';
@@ -41,6 +43,7 @@ import GoalProgress from '@/components/GoalProgress';
 import RiskAnalysis from '@/components/RiskAnalysis';
 import SessionsManager from '@/components/SessionsManager';
 import ApostasView from '@/components/ApostasView';
+import BancaSyncModal from '@/components/BancaSyncModal';
 import { useTheme } from '@/context/ThemeProvider';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -51,6 +54,7 @@ interface Props {
   user: { id: string; email: string };
   initialSettings: BankrollSettings;
   initialStatuses: Record<number, DayStatus>;
+  initialAdjustments: BankrollAdjustment[];
 }
 
 // ─── Tab config ───────────────────────────────────────────────────────────────
@@ -73,19 +77,22 @@ const FADE = {
 };
 
 const ACTION_CFG: Record<string, { label: string; Icon: React.ComponentType<{ className?: string }>; bg: string; bgDark: string; color: string; colorDark: string }> = {
-  settings_updated: { label: 'Configurações alteradas', Icon: Settings,  bg: '#EFF6FF', bgDark: '#1e3a5f', color: '#1D4ED8', colorDark: '#93C5FD' },
-  status_updated:   { label: 'Status do dia',           Icon: Pin,       bg: '#F0FDF4', bgDark: '#14532D', color: '#15803D', colorDark: '#4ADE80' },
-  statuses_reset:   { label: 'Registros resetados',     Icon: RotateCcw, bg: '#FFFBEB', bgDark: '#1E293B', color: '#92400E', colorDark: '#FBBF24' },
-  full_reset:       { label: 'Reset completo',          Icon: Trash2,    bg: '#FEF2F2', bgDark: '#7F1D1D', color: '#DC2626', colorDark: '#FCA5A5' },
+  settings_updated:    { label: 'Configurações alteradas', Icon: Settings,  bg: '#EFF6FF', bgDark: '#1e3a5f', color: '#1D4ED8', colorDark: '#93C5FD' },
+  status_updated:      { label: 'Status do dia',           Icon: Pin,       bg: '#F0FDF4', bgDark: '#14532D', color: '#15803D', colorDark: '#4ADE80' },
+  statuses_reset:      { label: 'Registros resetados',     Icon: RotateCcw, bg: '#FFFBEB', bgDark: '#1E293B', color: '#92400E', colorDark: '#FBBF24' },
+  full_reset:          { label: 'Reset completo',          Icon: Trash2,    bg: '#FEF2F2', bgDark: '#7F1D1D', color: '#DC2626', colorDark: '#FCA5A5' },
+  bankroll_adjusted:   { label: 'Ajuste de banca',         Icon: RotateCcw, bg: '#FFF7ED', bgDark: '#431407', color: '#C2410C', colorDark: '#FB923C' },
+  bankroll_reset_new:  { label: 'Reset com nova banca',    Icon: Trash2,    bg: '#FEF2F2', bgDark: '#7F1D1D', color: '#DC2626', colorDark: '#FCA5A5' },
 };
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function DashboardClient({ user, initialSettings, initialStatuses }: Props) {
+export default function DashboardClient({ user, initialSettings, initialStatuses, initialAdjustments }: Props) {
   const { theme } = useTheme();
   const dark = theme === 'dark';
   const [settings, setSettings] = useState<BankrollSettings>(initialSettings);
   const [statuses, setStatuses] = useState<Record<number, DayStatus>>(initialStatuses);
+  const [adjustments, setAdjustments] = useState<BankrollAdjustment[]>(initialAdjustments);
   const [saving, setSaving] = useState(false);
   const [savingDay, setSavingDay] = useState<number | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -93,6 +100,9 @@ export default function DashboardClient({ user, initialSettings, initialStatuses
   const [confirm, setConfirm] = useState<null | 'statuses' | 'all'>(null);
   const [copied, setCopied] = useState(false);
   const [tab, setTab] = useState<Tab>('dashboard');
+  const [syncModalOpen, setSyncModalOpen] = useState(false);
+  const [syncingValue, setSyncingValue] = useState<number | null>(null);
+  const [syncPending, setSyncPending] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('banca_tab') as Tab | null;
@@ -104,7 +114,7 @@ export default function DashboardClient({ user, initialSettings, initialStatuses
     localStorage.setItem('banca_tab', t);
   }, []);
 
-  const days = calculateBankroll(settings.initial_bankroll, settings.daily_return, statuses);
+  const days = calculateBankroll(settings.initial_bankroll, settings.daily_return, statuses, adjustments);
   const insightSummary = computeInsights(days, settings.goal, settings.initial_bankroll);
   const riskMetrics = computeRisk(days, settings.daily_return);
 
@@ -155,6 +165,7 @@ export default function DashboardClient({ user, initialSettings, initialStatuses
       await resetAll();
       setSettings(DEFAULT_SETTINGS);
       setStatuses({});
+      setAdjustments([]);
       addToast('success', 'Reset completo realizado!');
     });
   };
@@ -165,6 +176,52 @@ export default function DashboardClient({ user, initialSettings, initialStatuses
     changeTab('simulacao');
     addToast('success', 'Sessão carregada com sucesso!');
   }, [changeTab, addToast]);
+
+  const openSyncModal = useCallback((realValue: number) => {
+    setSyncingValue(realValue);
+    setSyncModalOpen(true);
+  }, []);
+
+  const closeSyncModal = useCallback(() => {
+    setSyncModalOpen(false);
+    setSyncingValue(null);
+  }, []);
+
+  const handleSync = async () => {
+    if (syncingValue === null) return;
+    const syncDay = days.find(d => d.status === 'pendente')?.day ?? 180;
+    setSyncPending(true);
+    try {
+      await createBankrollAdjustment(syncDay, insightSummary.currentBankroll, syncingValue, 'sync');
+      setAdjustments(prev => {
+        const filtered = prev.filter(a => a.day !== syncDay);
+        return [...filtered, { day: syncDay, old_value: insightSummary.currentBankroll, new_value: syncingValue, type: 'sync' }];
+      });
+      closeSyncModal();
+      addToast('success', 'Banca sincronizada com sucesso!');
+    } catch {
+      addToast('error', 'Erro ao sincronizar banca.');
+    } finally {
+      setSyncPending(false);
+    }
+  };
+
+  const handleSyncReset = async () => {
+    if (syncingValue === null) return;
+    setSyncPending(true);
+    try {
+      await resetToNewBankroll(syncingValue, settings.daily_return, settings.goal);
+      setSettings(prev => ({ ...prev, initial_bankroll: syncingValue }));
+      setStatuses({});
+      setAdjustments([]);
+      closeSyncModal();
+      addToast('success', 'Nova banca definida com sucesso!');
+    } catch {
+      addToast('error', 'Erro ao resetar banca.');
+    } finally {
+      setSyncPending(false);
+    }
+  };
 
   const handleExportCSV = () => {
     const header = ['Dia', 'Investimento', 'Retorno%', 'Lucro', 'Acumulado', 'Status'];
@@ -257,6 +314,13 @@ export default function DashboardClient({ user, initialSettings, initialStatuses
                 wins={insightSummary.wins}
                 losses={insightSummary.losses}
                 winRate={insightSummary.winRate}
+                adjustments={adjustments}
+              />
+
+              {/* Banca Real — Sincronização */}
+              <BancaRealCard
+                simulatedValue={insightSummary.currentBankroll}
+                onOpenSync={openSyncModal}
               />
 
               {/* KPI Strip — 3 projeções */}
@@ -407,6 +471,19 @@ export default function DashboardClient({ user, initialSettings, initialStatuses
         onConfirm={handleResetAll}
         onCancel={() => setConfirm(null)}
       />
+
+      {syncingValue !== null && (
+        <BancaSyncModal
+          open={syncModalOpen}
+          simulatedValue={insightSummary.currentBankroll}
+          realValue={syncingValue}
+          syncDay={days.find(d => d.status === 'pendente')?.day ?? 180}
+          loading={syncPending}
+          onContinue={closeSyncModal}
+          onSync={handleSync}
+          onReset={handleSyncReset}
+        />
+      )}
     </div>
   );
 }
@@ -471,11 +548,91 @@ function SettingsCollapsible({
 
 // ─── Banca Hero ───────────────────────────────────────────────────────────────
 
+function BancaRealCard({
+  simulatedValue, onOpenSync,
+}: {
+  simulatedValue: number;
+  onOpenSync: (realValue: number) => void;
+}) {
+  const { theme } = useTheme();
+  const dark = theme === 'dark';
+  const [raw, setRaw] = useState('');
+
+  function parsePtBR(s: string): number {
+    const cleaned = s.replace(/\./g, '').replace(',', '.');
+    const n = parseFloat(cleaned);
+    return isNaN(n) ? 0 : n;
+  }
+
+  const parsedValue = parsePtBR(raw);
+  const isValid = parsedValue > 0;
+  const diff = isValid ? parsedValue - simulatedValue : 0;
+  const hasDiff = isValid && Math.abs(diff) > 0.01;
+  const isPositive = diff >= 0;
+
+  return (
+    <div className="bg-white dark:bg-[#1E293B] rounded-2xl border border-[#E2E8F0] dark:border-[#334155] p-5">
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <h3 className="text-sm font-bold text-[#0F172A] dark:text-[#F1F5F9]">Banca Real</h3>
+          <p className="text-xs text-[#94A3B8] dark:text-[#64748B] mt-0.5">
+            Quanto você tem agora de verdade? (opcional)
+          </p>
+        </div>
+        {hasDiff && (
+          <span
+            className={`text-xs font-bold tabular-nums px-2.5 py-1 rounded-full ${
+              isPositive
+                ? 'bg-[#DCFCE7] text-[#15803D] dark:bg-[#14532D] dark:text-[#4ADE80]'
+                : 'bg-[#FEE2E2] text-[#DC2626] dark:bg-[#7F1D1D] dark:text-[#FCA5A5]'
+            }`}
+          >
+            {isPositive ? '+' : ''}{formatBRL(diff)}
+          </span>
+        )}
+      </div>
+
+      <div className="flex gap-2">
+        <input
+          type="text"
+          inputMode="decimal"
+          value={raw}
+          onChange={e => setRaw(e.target.value)}
+          placeholder="Ex: 1.200,00"
+          className="flex-1 px-3 py-2 text-sm rounded-xl border border-[#E2E8F0] dark:border-[#334155] bg-[#F8FAFC] dark:bg-[#0F172A] text-[#0F172A] dark:text-[#F1F5F9] placeholder:text-[#CBD5E1] dark:placeholder:text-[#475569] focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all"
+        />
+        {hasDiff && (
+          <button
+            onClick={() => onOpenSync(parsedValue)}
+            className="px-4 py-2 text-sm font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] rounded-xl transition-colors whitespace-nowrap"
+          >
+            Ajustar
+          </button>
+        )}
+      </div>
+
+      {hasDiff && (
+        <p className={`text-xs mt-2 flex items-center gap-1.5 font-medium ${
+          isPositive
+            ? 'text-[#15803D] dark:text-[#4ADE80]'
+            : 'text-[#F59E0B] dark:text-[#FBBF24]'
+        }`}>
+          <span>{isPositive ? '▲' : '⚠'}</span>
+          Sua banca real está {isPositive ? 'acima' : 'abaixo'} da simulação. Clique em Ajustar para sincronizar.
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ─── Banca Hero ───────────────────────────────────────────────────────────────
+
 function BancaHero({
-  current, initial, goal, activeDays, wins, losses, winRate,
+  current, initial, goal, activeDays, wins, losses, winRate, adjustments,
 }: {
   current: number; initial: number; goal: number;
   activeDays: number; wins: number; losses: number; winRate: number;
+  adjustments: BankrollAdjustment[];
 }) {
   const { theme } = useTheme();
   const dark = theme === 'dark';
@@ -572,6 +729,18 @@ function BancaHero({
             <span className="font-black">{s.value}</span>
           </div>
         ))}
+        {adjustments.length > 0 && (
+          <div
+            className="flex items-baseline gap-1.5 px-3 py-1.5 rounded-full text-xs"
+            style={{
+              background: dark ? 'rgba(251,146,60,0.12)' : 'rgba(194,65,12,0.08)',
+              color: dark ? '#FB923C' : '#C2410C',
+            }}
+          >
+            <span style={{ opacity: 0.7 }}>Sinc.</span>
+            <span className="font-black">{adjustments.length}x</span>
+          </div>
+        )}
       </div>
     </div>
   );

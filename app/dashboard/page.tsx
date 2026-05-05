@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { getSettings, getDayStatuses } from '@/lib/actions';
+import { getSettings, getDayStatuses, getBankrollAdjustments } from '@/lib/actions';
 import DashboardClient from './DashboardClient';
 
 export default async function DashboardPage() {
@@ -11,9 +11,10 @@ export default async function DashboardPage() {
 
   if (!user) redirect('/login');
 
-  const [settings, statuses] = await Promise.all([
+  const [settings, statuses, adjustments] = await Promise.all([
     getSettings(),
     getDayStatuses(),
+    getBankrollAdjustments(),
   ]);
 
   return (
@@ -21,6 +22,7 @@ export default async function DashboardPage() {
       user={{ id: user.id, email: user.email ?? '' }}
       initialSettings={settings}
       initialStatuses={statuses}
+      initialAdjustments={adjustments}
     />
   );
 }

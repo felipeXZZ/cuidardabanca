@@ -140,4 +140,24 @@ CREATE TRIGGER trg_bets_updated_at
   BEFORE UPDATE ON public.bets
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
+-- ─── BANKROLL_ADJUSTMENTS ────────────────────────────────────────────────────
+-- Registra sincronizações manuais entre banca real e simulada
+CREATE TABLE IF NOT EXISTS public.bankroll_adjustments (
+  id          UUID          NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id     UUID          NOT NULL REFERENCES auth.users ON DELETE CASCADE,
+  day         INTEGER       NOT NULL CHECK (day BETWEEN 1 AND 180),
+  old_value   NUMERIC(15,2) NOT NULL,
+  new_value   NUMERIC(15,2) NOT NULL,
+  type        TEXT          NOT NULL CHECK (type IN ('sync', 'reset')),
+  created_at  TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+  UNIQUE (user_id, day)
+);
+
+ALTER TABLE public.bankroll_adjustments ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "bankroll_adjustments: all own"
+  ON public.bankroll_adjustments FOR ALL
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
 -- ─── FIM ─────────────────────────────────────────────────────────────────────

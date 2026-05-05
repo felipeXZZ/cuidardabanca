@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, XCircle, Clock3, BadgeCheck, Target, TrendingUp, Filter } from 'lucide-react';
+import { CheckCircle2, XCircle, Clock3, BadgeCheck, Target, TrendingUp, Filter, RefreshCw, RotateCcw } from 'lucide-react';
 import { type DayData, type DayStatus, formatBRL, formatPct } from '@/lib/bankroll';
 import { useTheme } from '@/context/ThemeProvider';
 import Tabs from '@/components/Tabs';
@@ -143,8 +143,32 @@ function DayTable({ days, from, to, onStatusChange, savingDay, goal, filter }: {
               const accumTxt  = dark ? '#93C5FD'  : '#1e40af';
 
               return (
+                <Fragment key={d.day}>
+                  {/* Adjustment divider row */}
+                  {d.adjustment && (
+                    <tr style={{ backgroundColor: dark ? '#1c1609' : '#FFFBEB' }}>
+                      <td colSpan={7} className="px-3 py-2 border-y border-[#FDE68A] dark:border-[#78350F]">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {d.adjustment.type === 'sync'
+                            ? <RefreshCw className="w-3 h-3 text-[#D97706] dark:text-[#FBBF24] flex-shrink-0" />
+                            : <RotateCcw className="w-3 h-3 text-[#D97706] dark:text-[#FBBF24] flex-shrink-0" />
+                          }
+                          <span className="text-[11px] font-bold text-[#92400E] dark:text-[#FBBF24] uppercase tracking-wider">
+                            {d.adjustment.type === 'sync' ? 'Sincronização de banca' : 'Reset de banca'}
+                          </span>
+                          <span className="text-[11px] text-[#B45309] dark:text-[#F59E0B] tabular-nums">
+                            {formatBRL(d.adjustment.old_value)} → {formatBRL(d.adjustment.new_value)}
+                          </span>
+                          {d.adjustment.created_at && (
+                            <span className="text-[10px] text-[#D97706] dark:text-[#FBBF24] opacity-60 ml-auto">
+                              {new Date(d.adjustment.created_at).toLocaleDateString('pt-BR')}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
                 <tr
-                  key={d.day}
                   className="border-b border-[#F8FAFC] dark:border-[#334155]/40 last:border-b-0 transition-colors"
                   style={{ backgroundColor: rowBg, opacity: isSaving ? 0.45 : 1 }}
                 >
@@ -238,6 +262,7 @@ function DayTable({ days, from, to, onStatusChange, savingDay, goal, filter }: {
                     </div>
                   </td>
                 </tr>
+                </Fragment>
               );
             })}
 
