@@ -34,7 +34,11 @@ export function computeInsights(
   const losses = completed.filter(d => d.status === 'derrota');
   const activeDays = completed.length;
 
-  const currentBankroll = activeDays > 0 ? completed[activeDays - 1].accumulated : initialBankroll;
+  let currentBankroll = activeDays > 0 ? completed[activeDays - 1].accumulated : initialBankroll;
+  const firstPending = days.find(d => d.status === 'pendente');
+  if (firstPending?.adjustment?.type === 'sync') {
+    currentBankroll = firstPending.adjustment.new_value;
+  }
   const totalGrowthPct =
     initialBankroll > 0 ? ((currentBankroll - initialBankroll) / initialBankroll) * 100 : 0;
   const winRate = activeDays > 0 ? (wins.length / activeDays) * 100 : 0;

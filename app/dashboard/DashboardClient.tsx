@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Table2, BarChart2, TrendingUp, TrendingDown,
   Layers, History, Download, Copy, Check, Clock,
-  Settings, Pin, RotateCcw, Trash2, ArrowRight, Loader2, Dices, ChevronDown,
+  Settings, Pin, RotateCcw, Trash2, ArrowRight, Loader2, ChevronDown,
 } from 'lucide-react';
 import {
   calculateBankroll,
@@ -42,13 +42,12 @@ import InsightsPanel from '@/components/InsightsPanel';
 import GoalProgress from '@/components/GoalProgress';
 import RiskAnalysis from '@/components/RiskAnalysis';
 import SessionsManager from '@/components/SessionsManager';
-import ApostasView from '@/components/ApostasView';
 import BancaSyncModal from '@/components/BancaSyncModal';
 import { useTheme } from '@/context/ThemeProvider';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Tab = 'dashboard' | 'simulacao' | 'graficos' | 'analise' | 'sessoes' | 'historico' | 'apostas';
+type Tab = 'dashboard' | 'simulacao' | 'graficos' | 'analise' | 'sessoes' | 'historico';
 
 interface Props {
   user: { id: string; email: string };
@@ -64,7 +63,6 @@ const TABS: { id: Tab; label: string; Icon: React.ComponentType<{ className?: st
   { id: 'simulacao',  label: 'Simulação',  Icon: Table2 },
   { id: 'graficos',   label: 'Gráficos',   Icon: BarChart2 },
   { id: 'analise',    label: 'Análise',    Icon: TrendingUp },
-  { id: 'apostas',    label: 'Apostas',    Icon: Dices },
   { id: 'sessoes',    label: 'Sessões',    Icon: Layers },
   { id: 'historico',  label: 'Histórico',  Icon: History },
 ];
@@ -418,16 +416,6 @@ export default function DashboardClient({ user, initialSettings, initialStatuses
                 </div>
                 <RiskAnalysis metrics={riskMetrics} dailyReturn={settings.daily_return} />
               </div>
-            </div>
-          )}
-
-          {/* ══ APOSTAS ══ */}
-          {tab === 'apostas' && (
-            <div className="max-w-[1700px] mx-auto px-4 sm:px-6 py-6">
-              <ApostasView
-                simulationDays={days}
-                initialBankroll={settings.initial_bankroll}
-              />
             </div>
           )}
 
@@ -875,11 +863,10 @@ function ActionsRow({ onNav, dark }: { onNav: (t: Tab) => void; dark: boolean })
   const items: { label: string; sub: string; tab: Tab; Icon: React.ComponentType<{ className?: string }> }[] = [
     { label: 'Ver Simulação', sub: '180 dias detalhados', tab: 'simulacao', Icon: Table2 },
     { label: 'Ver Análise',   sub: 'Risco e insights',    tab: 'analise',   Icon: TrendingUp },
-    { label: 'Apostas Reais', sub: 'Performance real',    tab: 'apostas',   Icon: Dices },
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       {items.map(({ label, sub, tab, Icon }) => (
         <button
           key={tab}
